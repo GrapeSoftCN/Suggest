@@ -309,10 +309,8 @@ public class Suggest {
     	infos.put("rMode", rMode.toJSONString()); //添加默认查看权限
     	infos.put("uMode", uMode.toJSONString()); //添加默认修改权限
     	infos.put("dMode", dMode.toJSONString()); //添加默认删除权限
-    	String infoa = JSONObject.toJSONString(infos);
         try {
-        	
-            obj = suggest.data(infoa).insertOnce();
+            obj = suggest.data(infos).insertEx();
         } catch (Exception e) {
             nlogger.logout(e);
             obj = null;
