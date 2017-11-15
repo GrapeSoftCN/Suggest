@@ -6,6 +6,7 @@ import org.json.simple.JSONObject;
 import JGrapeSystem.rMsg;
 import Model.CommonModel;
 import apps.appsProxy;
+import authority.plvDef.plvType;
 import interfaceModel.GrapeDBSpecField;
 import interfaceModel.GrapeTreeDBModel;
 import json.JSONHelper;
@@ -23,6 +24,7 @@ public class Suggest {
     private JSONObject userInfo = null;
     private String currentWeb = null;
     private String currentUser = null;
+    private Integer userType = null;
 
     public Suggest() {
         model = new CommonModel();
@@ -31,12 +33,14 @@ public class Suggest {
         gDbSpecField.importDescription(appsProxy.tableConfig("Suggest"));
         suggest.descriptionModel(gDbSpecField);
         suggest.bindApp();
+        suggest.enableCheck();//开启权限检查
 
         se = new session();
         userInfo = se.getDatas();
         if (userInfo != null && userInfo.size() != 0) {
             currentWeb = userInfo.getString("currentWeb"); // 当前站点id
             currentUser = userInfo.getMongoID("_id"); // 当前用户id
+            userType =userInfo.getInt("userType");//当前用户身份
         }
     }
 
@@ -298,8 +302,17 @@ public class Suggest {
      */
     private String insert(String info) {
         Object obj = null;
+        JSONObject infos =JSONObject.toJSON(info);
+        JSONObject rMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 100);//设置默认查询权限
+    	JSONObject uMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 200);
+    	JSONObject dMode = new JSONObject(plvType.chkType, plvType.powerVal).puts(plvType.chkVal, 300);
+    	infos.put("rMode", rMode.toJSONString()); //添加默认查看权限
+    	infos.put("uMode", uMode.toJSONString()); //添加默认修改权限
+    	infos.put("dMode", dMode.toJSONString()); //添加默认删除权限
+    	String infoa = JSONObject.toJSONString(infos);
         try {
-            obj = suggest.data(info).insertOnce();
+        	
+            obj = suggest.data(infoa).insertOnce();
         } catch (Exception e) {
             nlogger.logout(e);
             obj = null;
